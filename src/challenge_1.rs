@@ -51,28 +51,42 @@ fn ascii_to_b64_index(c: u8) -> u8 {
     }
 }
 
-pub fn b64_to_bytes(b64_str: &str) -> Vec<u8> {
-    assert!(b64_str.len() % 4 == 0);
-
-    if b64_str.is_empty() {
+pub fn b64_to_bytes(input: &str) -> Vec<u8> {
+    if input.is_empty() {
         return Vec::new();
     }
 
     let mut out: Vec<u8> = Vec::new();
+    let mut idx = 0;
+    let mut chunk: [u8; 4] = [0; 4];
+    let in_bytes = input.as_bytes();
 
-    for chunk in b64_str.as_bytes().chunks_exact(4) {
+    while idx < in_bytes.len() {
+        // fill chunk with next 4 valid b64 chars
+        let mut chunk_idx = 0;
+        while chunk_idx < 4 {
+            if is_ascii_b64(in_bytes[idx]) {
+                chunk[chunk_idx] = in_bytes[idx];
+                idx += 1;
+            } else {
+                idx += 1;
+                if idx >= in_bytes.len() {
+                    return out;
+                }
+                continue;
+            }
+            chunk_idx += 1;
+        }
+
+        // decode
         out.push((ascii_to_b64_index(chunk[0]) << 2) | (ascii_to_b64_index(chunk[1]) >> 4));
-
         if chunk[2] == BASE64_PAD as u8 {
             return out;
         }
-
         out.push(((ascii_to_b64_index(chunk[1]) & 0xF) << 4) | (ascii_to_b64_index(chunk[2]) >> 2));
-
         if chunk[3] == BASE64_PAD as u8 {
             return out;
         }
-
         out.push(((ascii_to_b64_index(chunk[2]) & 0x3) << 6) | ascii_to_b64_index(chunk[3]));
     }
 
@@ -116,6 +130,10 @@ pub fn b64_to_hex(b64_str: &str) -> String {
     bytes_to_hex(&b64_to_bytes(b64_str))
 }
 
+fn is_ascii_b64(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'\\' || b == b'+' || b == b'='
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -129,6 +147,10 @@ mod tests {
 
     #[test]
     fn test_b64_to_bytes() {
+        assert_eq!(
+            b64_to_bytes("bGlnaH\nQgd29y"),
+            &[b'l', b'i', b'g', b'h', b't', b' ', b'w', b'o', b'r']
+        );
         assert_eq!(
             b64_to_bytes("bGlnaHQgd29y"),
             &[b'l', b'i', b'g', b'h', b't', b' ', b'w', b'o', b'r']
