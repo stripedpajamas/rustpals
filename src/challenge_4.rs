@@ -19,21 +19,25 @@ pub fn detect_sbx(enc_list: &Vec<Vec<u8>>) -> usize {
 mod tests {
     use std::fs;
 
-    use crate::{challenge_3::{single_byte_xor, sbx_recover_key}, challenge_1::hex_to_bytes};
+    use crate::{
+        challenge_1::hex_to_bytes,
+        challenge_3::{sbx_recover_key, single_byte_xor},
+    };
 
     use super::*;
 
     #[test]
     fn test_detect_sbx() {
         let raw_file = fs::read_to_string("data/4.txt").unwrap();
-        let enc_list: Vec<Vec<u8>> = raw_file.lines()
-            .map(|line| { hex_to_bytes(line) })
-            .collect();
+        let enc_list: Vec<Vec<u8>> = raw_file.lines().map(|line| hex_to_bytes(line)).collect();
 
         let res = detect_sbx(&enc_list);
 
         let key = sbx_recover_key(&enc_list[res]);
         let plaintext = single_byte_xor(&enc_list[res], key);
-        assert_eq!(String::from_utf8_lossy(&plaintext), "Now that the party is jumping\n");
+        assert_eq!(
+            String::from_utf8_lossy(&plaintext),
+            "Now that the party is jumping\n"
+        );
     }
 }
