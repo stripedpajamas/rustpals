@@ -1,11 +1,11 @@
 use crate::challenge_3::{sbx_recover_key, score_english, single_byte_xor};
 
 /// Returns the index in the given list to the line that was encrypted with SBX
-pub fn detect_sbx(enc_list: &Vec<Vec<u8>>) -> usize {
+pub fn detect_sbx(enc_list: &[Vec<u8>]) -> usize {
     let mut best_score_idx: (f32, usize) = (f32::MIN, 0);
     for (idx, s) in enc_list.iter().enumerate() {
-        let key = sbx_recover_key(&s);
-        let plaintext = single_byte_xor(&s, key);
+        let key = sbx_recover_key(s);
+        let plaintext = single_byte_xor(s, key);
         let score = score_english(&plaintext);
 
         if score > best_score_idx.0 {
@@ -29,7 +29,7 @@ mod tests {
     #[test]
     fn test_detect_sbx() {
         let raw_file = fs::read_to_string("data/4.txt").unwrap();
-        let enc_list: Vec<Vec<u8>> = raw_file.lines().map(|line| hex_to_bytes(line)).collect();
+        let enc_list: Vec<Vec<u8>> = raw_file.lines().map(hex_to_bytes).collect();
 
         let res = detect_sbx(&enc_list);
 

@@ -25,7 +25,7 @@ pub fn bytes_to_b64(bytes: &[u8]) -> String {
             return out;
         }
         if chunk.len() == 2 {
-            out.push(BASE64[(((chunk[1] & 0xF) << 2) as usize)] as char);
+            out.push(BASE64[((chunk[1] & 0xF) << 2) as usize] as char);
             out.push(BASE64_PAD);
             return out;
         }
